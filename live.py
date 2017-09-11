@@ -14,9 +14,6 @@ from bot_info import SLACK_BOT_TOKEN, BOT_ID
 # instantiate Slack clients
 slack_client = SlackClient(SLACK_BOT_TOKEN)
 
-status_channel = [i['id'] for i in slack_client.api_call("groups.list")['groups']
-                  if i['name'] == 'botty_home'][0]
-
 # read in database
 db_conn = sqlite3.connect('ayerslab.db')
 cursor = db_conn.cursor()
@@ -86,7 +83,6 @@ if __name__ == "__main__":
                     parsed_msg['user'] = msg['user']
                     parsed_msg['channel'] = msg['channel']
                     parsed_msg['time'] = msg['ts']
-                    print(parsed_msg)
                     yield parsed_msg
 
             # process messages
