@@ -62,12 +62,12 @@ def add(db_conn, user, user_to_add):
     """
     cursor = db_conn.cursor()
     cursor.execute('SELECT id FROM members WHERE name=? OR userid=? OR slack_id=? OR '
-                   'id=?', (user,)*4)
+                   'id=?', (user_to_add,)*4)
     rows = cursor.fetchall()
     if len(rows) > 1:
-        raise ActionInputError('I found more than one person that goes by {0}'.format(user))
+        raise ActionInputError('I found more than one person that goes by {0}'.format(user_to_add))
     elif len(rows) == 0:
-        raise ActionInputError('I could not find anyone that goes by {0}'.format(user))
+        raise ActionInputError('I could not find anyone that goes by {0}'.format(user_to_add))
     else:
         members.modify(db_conn, user, 'door_permission', 'yesdoor', 'id', rows[0][0])
 

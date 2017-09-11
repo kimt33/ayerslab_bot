@@ -60,7 +60,8 @@ def act(arguments, actions):
         raise ActionInputError(actions['error'])
 
     if isinstance(contents, (tuple, list)):
-        doc, func, *default_args = contents
+        doc, func = contents[:2]
+        default_args = contents[2:]
         if not isinstance(doc, str):
             # FIXME: wording
             raise ValueError('First entry in the list of actions must be the documentation for '
@@ -69,7 +70,8 @@ def act(arguments, actions):
             # FIXME: wording
             raise ValueError('Second entry in the list of actions must be the executed function.')
         try:
-            func(*default_args, *arguments[1:])
+            args = default_args + arguments[1:]
+            func(*args)
             # TypeError is raised if wrong number of arguments are provided to the method
         except TypeError:
             raise ActionInputError(doc)
