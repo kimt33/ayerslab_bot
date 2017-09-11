@@ -129,6 +129,12 @@ if __name__ == "__main__":
                 actions = {
                     'door': {
                         'open': ['', door.open_door, db_conn, readable_user],
+                        '@': ['', door.open_door, db_conn, readable_user],
+                        '#': ['', door.open_door, db_conn, readable_user],
+                        'i': ['', door.open_door, db_conn, readable_user],
+                        'abre': ['', door.open_door, db_conn, readable_user],
+                        'ouvre': ['', door.open_door, db_conn, readable_user],
+                        u'\u5f00\u95e8': ['', door.open_door, db_conn, readable_user],
                         'add': ['To add a user to access the door, you must provide an '
                                 'identification of the user, like their name or Slack id.',
                                 door.add, db_conn, readable_user],
