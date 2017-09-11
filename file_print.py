@@ -52,7 +52,7 @@ def file_print(filename, sided='double', color='black', quality='economy', pages
     """
     filename = os.path.join('/tmp', filename)
 
-    command = ['lpr', ]
+    command = ['lpr', '-P', 'HP_LaserJet_400_color_M451dw']
     if sided == 'single':
         command += ['-o', 'sides=one-sided']
     elif sided == 'double':
@@ -84,6 +84,5 @@ def file_print(filename, sided='double', color='black', quality='economy', pages
     # print file
     command.append(filename)
 
-    out = ''
-    call(command, stdout=out)
+    call(command)
     raise ActionInputError('Bleep bloop.')
