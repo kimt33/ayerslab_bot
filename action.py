@@ -50,7 +50,7 @@ def act(arguments, actions):
 
     """
     try:
-        contents = actions[arguments[0]]
+        contents = actions[arguments[0].lower()]
         # here, IndexError is raised if arguments is empty
         # then, KeyError is raised if given argument is not a key in actions
     except (KeyError, IndexError):
