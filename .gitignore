@@ -1,2 +1,4 @@
 *.pyc
 *.db
+bot_info.py
+ayerslab.db

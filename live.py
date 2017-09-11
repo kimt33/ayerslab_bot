@@ -9,12 +9,10 @@ import door
 import members
 import quiet
 import file_print
-
-# starterbot's ID as an environment variable
-BOT_ID = os.environ.get("BOT_ID")
+from bot_info import SLACK_BOT_TOKEN, BOT_ID
 
 # instantiate Slack clients
-slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
+slack_client = SlackClient(SLACK_BOT_TOKEN)
 
 status_channel = [i['id'] for i in slack_client.api_call("groups.list")['groups']
                   if i['name'] == 'botty_home'][0]
