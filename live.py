@@ -1,6 +1,6 @@
-import os
 import shlex
 import sqlite3
+import datetime
 import time
 from slackclient import SlackClient
 import action
@@ -9,7 +9,13 @@ import door
 import members
 import quiet
 import file_print
+import money
 from bot_info import SLACK_BOT_TOKEN, BOT_ID
+
+# this is a monday at 2PM
+ref_date = datetime.datetime(2017, 9, 11, 14)
+# number of weeks since (plus one)
+week_counter = (datetime.datetime.now() - ref_date).days // 7 + 1
 
 # instantiate Slack clients
 slack_client = SlackClient(SLACK_BOT_TOKEN)
@@ -38,6 +44,14 @@ if u'quietlog' not in (j for i in cursor.fetchall() for j in i):
     (id INTEGER PRIMARY KEY,
         time TEXT NOT NULL,
         userid TEXT NOT NULL)''')
+    db_conn.commit()
+
+cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+if u'money' not in (j for i in cursor.fetchall() for j in i):
+    cursor.execute('CREATE TABLE money (id INTEGER PRIMARY KEY, lender TEXT NOT NULL, '
+                   'debtor TEXT NOT NULL, amount REAL NOT NULL, description TEXT, '
+                   'confirm_lender_receipt TEXT, confirm_debtor_receipt TEXT, '
+                   'confirm_lender_payment TEXT, confirm_debtor_payment TEXT)')
     db_conn.commit()
 
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
@@ -96,9 +110,9 @@ if __name__ == "__main__":
                 args = shlex.split(args)
 
                 # configure speak
-                def speak(message):
+                def speak(message, user=msg['user']):
                     """Respond to the message."""
-                    action.speak(slack_client, msg['channel'], message, msg['user'])
+                    action.speak(slack_client, msg['channel'], message, user)
 
                 # configure act
                 def act(arguments, actions):
@@ -173,14 +187,46 @@ if __name__ == "__main__":
                               "desired arugment to modify. For example, to specify print quality, "
                               "you must provide the number of sides and color.",
                               file_print.file_print],
+                    'money': {
+                        'remind': ['To remind people about money related things, you need to '
+                                   'provide their user names (space separated). If you want to find'
+                                   ' everyone related to you, write `everyone` instead.',
+                                   money.remind, slack_client, db_conn, readable_user],
+                        'remove': ['To remove a receipt, you need to provide the receipt ID.',
+                                   money.remove_receipt, db_conn, readable_user],
+                        'add': ["To add a receipt, you need to provide the lender, the borrower, "
+                                "the amount, and the description of the transaction, in the given "
+                                "order.",
+                                money.add_receipt, db_conn],
+                        'list': ['', money.list, db_conn],
+                        'confirm': ['To confirm a transaction, you need to provide the ID of the '
+                                    'receipt and the type of confirmation (one of `receipt` or '
+                                    '`payment`).', money.confirm, db_conn, readable_user]
+                    },
                     # 'meetings': {
-                    # },
-                    # 'money': {
                     # },
                     # 'random': {
                     # },
                 }
                 act(args, actions)
+
+            # time since reference
+            delta_time = (datetime.datetime.now() - ref_date).days
+            # On every monday near 2 PM
+            if delta_time % 7 == 0 and delta_time // 7 == week_counter:
+                cursor.execute('SELECT * FROM money WHERE confirm_lender_receipt=? OR '
+                               'confirm_lender_payment=? OR confirm_debtor_receipt=? OR '
+                               'confirm_debtor_payment=?', ('no',)*4)
+                receipts = cursor.fetchall()
+                for receipt in receipts:
+                    try:
+                        money.remind(slack_client, db_conn, receipt[1], receipt[2])
+                    except action.ActionInputError as error:
+                        cursor.execute('SELECT slack_id FROM members WHERE name=? OR userid=? OR '
+                                       'slack_id=? OR id=?', (receipt[1],)*4)
+                        im_channel = slack_client.api_call("im.open", user=cursor.fetchone()[0])['channel']['id']
+                        action.speak(slack_client, im_channel, str(error))
+                week_counter += 1
 
             # 1 second delay between reading from firehose
             time.sleep(1)
