@@ -26,7 +26,9 @@ def upload(msg):
     #     raise ActionInputError('You can only upload pdf files.')
     with urllib.request.urlopen(url) as response, open(os.path.join('/tmp', filename), 'wb') as fh:
         shutil.copyfileobj(response, fh)
-    raise ActionInputError('Bleep bloop.')
+    raise ActionInputError('Just to let you know, the file name is stored all in lower case and all'
+                           ' of the spaces are converted to underscores. For example, '
+                           '`Some\ File.sh` is changed to `some_file.sh`.')
 
 
 def file_print(filename, sided='double', color='black', quality='economy', pages=''):
